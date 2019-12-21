@@ -7,5 +7,7 @@ pages:
   artifacts:
     paths:
     - public
+    - texturas
+    - lib
   only:
   - master
