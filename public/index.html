@@ -1,23 +1,431 @@
+<!--PRISMA 3d
+    -->
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="generator" content="GitLab Pages">
-    <title>Plain HTML site using GitLab Pages</title>
-    <link rel="stylesheet" href="style.css">
-  </head>
-  <body>
-    <div class="navbar">
-      <a href="https://pages.gitlab.io/plain-html/">Plain HTML Example</a>
-      <a href="https://gitlab.com/pages/plain-html/">Repository</a>
-      <a href="https://gitlab.com/pages/">Other Examples</a>
-    </div>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<title>Iluminación y Texturas</title>
+<style>
+        body{ background-color: grey; }
+      canvas{ background-color: rgb(20,20,20);
+              border: 1px solid black;
+              margin-bottom: 10px}
+      h1,h2 {
+        font-family: courier
+      }
 
-    <h1>Hello World!</h1>
+      table, th, td{
+           border: 1px solid black;
+           border-collapse: collapse;
+           background-color: rgb(255,255,255);
+           font-family: courier;
+         }
 
-    <p>
-      This is a simple plain-HTML website on GitLab Pages, without any fancy static site generator.
-    </p>
-  </body>
+         legend{
+           font-family: courier;
+           font-weight: bold;
+           font-size: 22px;
+           padding-left: 12px;
+         }
+
+         /*****SLIDERS*****/
+
+         .slider {
+          -webkit-appearance: none;
+          height: 20px;
+          background: #a3a0a0;
+          outline: none;
+          opacity: 0.7;
+          -webkit-transition: .2s;
+          transition: opacity .2s;
+        }
+        .slider:disabled{
+          background: #d3d3d3
+        }
+
+        .slider:hover {
+          opacity: 1;
+        }
+
+        .slider::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          background: #4CAF50;
+          cursor: pointer;
+        }
+
+        .slider:enabled::-moz-range-thumb{
+          width: 20px;
+          height: 20px;
+          background: #4CAF50;
+          cursor: pointer;
+        }
+
+        .slider:disabled::-moz-range-thumb{
+          width: 20px;
+          height: 20px;
+          background: #d4d4d3;
+          cursor: pointer;
+        }
+
+        /******CHECKBOX****/
+
+        /* Contenedor de las opciones */
+        .container {
+          display: grid;
+          position: relative;
+          padding-left: 35px;
+          padding-right: 10px;
+          margin-bottom: 12px;
+          margin-right: 10px;
+          cursor: pointer;
+          font-size: 22px;
+          font-weight: bold;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+          font-family: courier;
+        }
+
+        /* Caja de checkboxes*/
+        #checks{
+          width: 230px;
+          height:75px;
+          border-style: solid;
+          padding-left: 12px;
+          padding-top: 12px;
+          margin-bottom: 10px;
+          margin-left: 10px;
+          background:white;
+        }
+
+        /* Para esconder el checkbox por defecto*/
+        .container input {
+          position: absolute;
+          opacity: 0;
+          cursor: pointer;
+          height: 0;
+          width: 0;
+        }
+
+        /* Cuadrado de marcado */
+        .checkmark {
+          position: absolute;
+          top: 0;
+          left: 0;
+          height: 25px;
+          width: 25px;
+          background-color: #eee;
+        }
+
+        /* Si pasas por encima cuando no está marcado se pone de este color */
+        .container:hover input ~ .checkmark {
+          background-color: #ccc;
+        }
+
+        /* Color cuando está marcado */
+        .container input:checked ~ .checkmark {
+          background-color: #4CAF50;
+        }
+
+        /* Create the checkmark/indicator (hidden when not checked) */
+        .checkmark:after {
+          content: "";
+          position: absolute;
+          display: none;
+        }
+
+        /* Muestra el tick de marcado */
+        .container input:checked ~ .checkmark:after {
+          display: block;
+        }
+
+        /* Estilo del tick */
+        .container .checkmark:after {
+          left: 9px;
+          top: 5px;
+          width: 5px;
+          height: 10px;
+          border: solid white;
+          border-width: 0 3px 3px 0;
+          -webkit-transform: rotate(45deg);
+          -ms-transform: rotate(45deg);
+          transform: rotate(45deg);
+        }
+
+
+        /**** TEXTURAS *****/
+
+        .radio-toolbar {
+          margin: 10px;
+        }
+
+        .radio-toolbar input[type="radio"] {
+          opacity: 0;
+          position: fixed;
+          width: 0;
+        }
+
+        .radio-toolbar label {
+            display: inline-block;
+            background-color: rgb(255,255,255);
+            padding: 10px 20px;
+            font-family: courier;
+            font-size: 20px;
+            font-weight: bold;
+            border: 2px solid #444;
+            border-radius: 4px;
+        }
+
+        /* Configuración cuando está activado*/
+        .radio-toolbar input[type="radio"]:checked + label {
+            background-color: #bfaf;
+            border-color: #4c4;
+        }
+</style>
+<!--**********************************************
+      SCRIPTS BIBLIOTECAS DE AYUDA PARA ROTACIONES 3D
+    ***********************************************  -->
+<script type="text/javascript" src="./lib/gl-matrix-min.js"></script>
+<script type="text/javascript" src="./Práctica3.js"></script>
+<script type="text/javascript" src="./lib/cuon-matrix.js"></script>
+
+
+<!-- ****************   VERTEX SHADER *******************-->
+<script id="vertex-shader" type="x-shader/x-vertex">
+
+  attribute vec4 aVertexPosition;
+  attribute vec2 aTexCoord;
+  attribute vec3 aNormal;
+
+  //Matriz de trasnformación
+  uniform mat4 uMvMatrix;
+
+  //Textura
+  varying vec2 vTexCoord;
+
+  //Luces
+  uniform vec3 u_AmbientLight;
+  uniform vec3 u_DiffuseLight;
+  uniform vec3 u_LightDirection;
+
+  varying vec4 ambient;
+  varying vec4 diffuse;
+  varying float specular;
+
+  //ESPECULAR
+
+void main() {
+
+  //AHORA transformo las coordenadas
+   gl_Position= uMvMatrix*vec4(aVertexPosition);
+
+   gl_PointSize=10.0; //TAMAÑO DEL PUNTO
+
+   vTexCoord=aTexCoord;
+
+   ambient = vec4(u_AmbientLight,1.0);
+
+   vec3 normal = mat3(uMvMatrix)*normalize(aNormal.xyz);
+
+   float nDotL = max(dot(u_LightDirection,normal),0.0);
+
+   diffuse = vec4(u_DiffuseLight*nDotL,1.0);
+
+   //ESPECULAR
+   float specular = 0.0;
+   if(nDotL>0.0){
+     vec3 viewVec = vec3(0,0,1.0);
+     vec3 reflectVec = reflect(-u_LightDirection,normal);
+     specular=pow(max(dot(reflectVec,viewVec),0.0),10.0);
+   }
+
+}
+</script>
+<!-- ****************   FRAGMENT SHADER *******************-->
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+varying vec2 vTexCoord;
+uniform sampler2D uTexture;
+
+// LUCES
+varying vec4 ambient;
+varying vec4 diffuse;
+varying float specular;
+
+
+void main() {
+
+   gl_FragColor = texture2D(uTexture,vTexCoord)+ambient+diffuse+specular;
+}
+</script>
+
+
+<!-- ****************                    *******************-->
+<!-- ****************   html             *******************-->
+<!-- ****************                    *******************-->
+
+</head>
+<body onload="initWebGL()">
+<div class="description">
+  <h1> Práctica 3 : Iluminación y Texturas </h1>
+  <h2> Alberto Calvo Madurga </h2>
+</div>
+<div>
+  <legend> Iluminación </legend>
+  <div  id="checks">
+  <label class="container">Luz Ambiente
+
+    <input type="checkbox" checked="checked" id="activaambiente">
+    <span class="checkmark"></span>
+  </label>
+  <label class="container">Luz Difusa
+
+      <input type="checkbox" checked="checked" id="activadifusa">
+      <span class="checkmark"></span>
+  </label>
+</div>
+<div>
+  <div id="texturas">
+        <legend> Texturas </legend>
+        <div class="radio-toolbar">
+          <input type="radio" id="Rubik" name="radioFruit" value="Rubik" onchange="onChangeRubikRadiobutton()">
+          <label for="Rubik"> Rubik </label>
+
+          <input type="radio" id="Kiwi" name="radioFruit" value="Kiwi" onchange="onChangeKiwiRadiobutton()">
+          <label for="Kiwi"> Kiwi </label>
+
+          <input type="radio" id="Grieta" name="radioFruit" value="Grieta" onchange="onChangeGrietaRadiobutton()" checked>
+          <label for="Grieta"> Grieta </label>
+      </div>
+
+
+
+      </div>
+  <canvas id="canvas" width="400" height="400"></canvas>
+</div>
+<table id="t01">
+  <tr>
+    <th>Luz Ambiente</th>
+    <th>Luz Difusa</th>
+  </tr>
+  <tr>
+  <th>Color Rojo <input type="range" min="1" max="255" step="1" value="123" class="slider" id="red"></th>
+  <th>Coord X <input type="range" min="-5" max="5" step="0.1" value="0" class="slider" id="difx"></th>
+  </tr>
+  <tr>
+  <th>Color Verde <input type="range"  min="1" max="255" step="1" value="0"class="slider" id="green"></th>
+  <th>Coord Y <input type="range" min="-5" max="5" step="0.1" value="3" class="slider" id="dify"></th>
+  </tr>
+  <tr>
+    <th>Color Azul <input type="range" min="1" max="255" step="1" value="0" class="slider" id="blue"></th>
+    <th>Coord Z <input type="range" min="-5" max="5" step="0.1" value="2" class="slider" id="difz"></th>
+  </tr>
+</table>
+</body>
+<script type="text/javascript">
+
+  //Sliders
+  red.addEventListener('change',function(){r = parseFloat(document.getElementById("red").value)/255;});
+  blue.addEventListener('change',function(){g = parseFloat(document.getElementById("green").value)/255;});
+  green.addEventListener('change',function(){b = parseFloat(document.getElementById("blue").value)/255;});
+  difx.addEventListener('change',function(){dx = parseFloat(document.getElementById("dify").value);})
+  dify.addEventListener('change',function(){dy = parseFloat(document.getElementById("difz").value);})
+  difz.addEventListener('change',function(){dz = parseFloat(document.getElementById("difz").value);})
+
+  //Control de luz ambiente
+  activaambiente.addEventListener('change',function(){
+    if(this.checked){
+      activaAmbiente();
+    }else{
+      desactivaAmbiente();
+      r=0;g=0;b=0;
+    }
+  });
+
+  //Control de luz difusa
+  activadifusa.addEventListener('change',function(){
+    if(this.checked){
+      rdifu=1.0;
+      gdifu=1.0;
+      bdifu=1.0;
+      activaDifusa();
+    }else{
+      rdifu=0.0;
+      gdifu=0.0;
+      bdifu=0.0;
+      desactivaDifusa();
+    }
+  });
+
+
+</script>
+
+<script>
+/**
+* FUNCIONES PARA ELEMENTOS HTML
+**/
+
+//Función con valores iniciales para los sliders
+function inicializarSliders(){
+  rdifu=1.0;gdifu=1.0;bdifu=1.0;
+  document.getElementById("red").value=0;
+  document.getElementById("green").value=0;
+  document.getElementById("blue").value=0;
+  document.getElementById("difx").value=0;
+  document.getElementById("dify").value=3.0;
+  document.getElementById("difz").value=2.0;
+  document.getElementById("activaambiente").checked=true;
+  document.getElementById("activadifusa").checked=true;
+  document.getElementById("Grieta").checked=true;
+}
+
+function desactivaAmbiente(){
+  document.getElementById("red").disabled=true;
+  document.getElementById("green").disabled=true;
+  document.getElementById("blue").disabled=true;
+
+}
+function activaAmbiente(){
+  document.getElementById("red").disabled=false;
+  document.getElementById("green").disabled=false;
+  document.getElementById("blue").disabled=false;
+}
+function desactivaDifusa(){
+  document.getElementById("difx").disabled=true;
+  document.getElementById("dify").disabled=true;
+  document.getElementById("difz").disabled=true;
+}
+function activaDifusa(){
+  document.getElementById("difx").disabled=false;
+  document.getElementById("dify").disabled=false;
+  document.getElementById("difz").disabled=false;
+}
+
+function onChangeRubikRadiobutton() {
+    if(materialactual.nombre !== "Rubik") {
+        materialactual = MATERIALS.Rubik;
+        setTexturas();
+    }
+}
+
+function onChangeKiwiRadiobutton() {
+    if(materialactual.nombre !== "Kiwi") {
+        materialactual = MATERIALS.Kiwi;
+        setTexturas();
+    }
+}
+
+function onChangeGrietaRadiobutton() {
+    if(materialactual.nombre !== "Grieta") {
+        materialactual = MATERIALS.Grieta;
+        setTexturas();
+    }
+}
+
+
+</script>
 </html>
-
